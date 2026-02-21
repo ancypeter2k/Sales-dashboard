@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchDashboard } from "./features/dashboard/dashboardSlice";
+import { BACKEND_DISPLAY_URL } from "./features/dashboard/dashboardAPI";
 import KPISection from "./components/KPISection";
 import StatusTable from "./components/StatusTable";
 import SalesTrendChart from "./components/SalesTrendChart";
@@ -13,7 +14,7 @@ const THEME_KEY = "sales-dashboard-theme";
 
 function App() {
   const dispatch = useDispatch();
-  const { data, loading, error, days } = useSelector((state) => state.dashboard);
+  const { data, loading, error, days, fallbackData } = useSelector((state) => state.dashboard);
 
   const [theme, setTheme] = useState(() => {
     const stored = window.localStorage.getItem(THEME_KEY);
@@ -77,19 +78,35 @@ function App() {
           </div>
         )}
 
-        {/* Error Section */}
-        {error && (
+        {/* Error Section — only when we have no data at all */}
+        {error && !data && (
           <div className="fade-in rounded-2xl border border-rose-300/50 bg-rose-100/80 p-5 text-rose-900 shadow-sm">
             <p className="font-semibold">Unable to load dashboard data.</p>
             <p className="mt-1 text-sm">
-              {error}. Confirm the backend service is available at{" "}
-              <code className="rounded bg-rose-200/90 px-1.5 py-0.5 font-semibold">http://localhost:5001</code>.
+              {error}. Start the backend with{" "}
+              <code className="rounded bg-rose-200/90 px-1.5 py-0.5 font-semibold">
+                cd backend && npm start
+              </code>{" "}
+              (reachable at {BACKEND_DISPLAY_URL}).
+            </p>
+          </div>
+        )}
+
+        {/* Sample-data notice when showing fallback */}
+        {fallbackData && data && (
+          <div className="fade-in rounded-2xl border border-amber-300/50 bg-amber-100/80 px-4 py-3 text-amber-900 shadow-sm dark:border-amber-600/40 dark:bg-amber-900/30 dark:text-amber-200">
+            <p className="text-sm font-medium">
+              Showing sample data. Backend is not running — start it at{" "}
+              <code className="rounded bg-amber-200/90 px-1.5 py-0.5 dark:bg-amber-800/50">
+                {BACKEND_DISPLAY_URL}
+              </code>{" "}
+              (<code>cd backend && npm start</code>) for live data.
             </p>
           </div>
         )}
 
         {/* Dashboard Content Section */}
-        {!loading && !error && data && (
+        {!loading && data && (
           <div className="space-y-6">
             {/* KPI Section */}
             <KPISection kpis={data.kpis} />

@@ -15,6 +15,7 @@ const dashboardSlice = createSlice({
     loading: false,
     error: null,
     days: 7,
+    fallbackData: false,
   },
   reducers: {
     setDays: (state, action) => {
@@ -30,7 +31,9 @@ const dashboardSlice = createSlice({
       .addCase(fetchDashboard.fulfilled, (state, action) => {
         state.loading = false;
         state.error = null;
-        state.data = action.payload;
+        const payload = action.payload;
+        state.data = payload?.data ?? payload;
+        state.fallbackData = payload?.fallback ?? false;
       })
       .addCase(fetchDashboard.rejected, (state, action) => {
         state.loading = false;

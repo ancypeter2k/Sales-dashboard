@@ -4,9 +4,9 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "db:schema": "node run-schema.js",
-    "db:seed": "node seed.js",
+    "start": "node --env-file=.env server.js",
+    "db:schema": "node --env-file=.env run-schema.js",
+    "db:seed": "node --env-file=.env seed.js",
     "db:setup": "npm run db:schema && npm run db:seed",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

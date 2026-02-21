@@ -73,9 +73,9 @@ const filterLeadsByDays = (leads, days) => {
   return leads.filter((l) => new Date(l.createdAt ?? l.created_at) >= cutoff);
 };
 
-// API route: dashboard summary endpoint
+// API route: dashboard summary endpoint (always returns 200 with data; falls back to in-memory on any error)
 app.get("/api/dashboard", async (req, res) => {
-  const days = parseInt(req.query.days, 10) || 7;
+  const days = Math.min(Math.max(parseInt(req.query.days, 10) || 7, 1), 365);
 
   try {
     const cutoff = getCutoffDate(days);
@@ -89,15 +89,25 @@ app.get("/api/dashboard", async (req, res) => {
       [cutoffIso]
     );
 
-    res.json(buildDashboardResponse(leads, days));
+    return res.json(buildDashboardResponse(leads, days));
   } catch (err) {
-    console.warn("Database unavailable, using in-memory data:", err.message);
+    console.warn("Dashboard: using in-memory fallback.", err.message);
+  }
+
+  try {
     const filtered = filterLeadsByDays(inMemoryLeads, days);
-    res.json(buildDashboardResponse(filtered, days));
+    return res.json(buildDashboardResponse(filtered, days));
+  } catch (fallbackErr) {
+    console.error("Dashboard fallback failed:", fallbackErr);
+    return res.status(500).json({
+      kpis: { totalLeads: 0, contactedLeads: 0, salesClosed: 0, totalRevenue: 0 },
+      statusSummary: STATUSES.map((s) => ({ status: s, count: 0 })),
+      salesTrend: [],
+    });
   }
 });
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`Dashboard API: http://localhost:${PORT}/api/dashboard`)
 );

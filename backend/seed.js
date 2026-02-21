@@ -1,4 +1,4 @@
-const { pool } = require("./db");
+import { pool } from "./db.js";
 
 const STATUSES = [
   "New",

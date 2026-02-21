@@ -1,9 +1,13 @@
-const { pool } = require("./db");
-const fs = require("fs");
-const path = require("path");
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
+import { pool } from "./db.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function runSchema() {
-  const sql = fs.readFileSync(path.join(__dirname, "schema.sql"), "utf8");
+  const sql = readFileSync(join(__dirname, "schema.sql"), "utf8");
   const statements = sql
     .split(";")
     .map((s) => s.trim())

@@ -1,11 +1,11 @@
 // Data model: supported lead lifecycle statuses
-const STATUSES = [
+export const STATUSES = [
   "New",
   "Contacted",
   "Follow Up",
   "Appointment Booked",
   "Converted",
-  "Lost"
+  "Lost",
 ];
 
 // Seed generator: creates realistic in-memory fallback dataset
@@ -24,14 +24,11 @@ function generateDummyData() {
       id: i + 1,
       status,
       revenue: status === "Converted" ? Math.floor(Math.random() * 5000) + 500 : 0,
-      createdAt
+      createdAt,
     });
   }
 
   return leads;
 }
 
-module.exports = {
-  leads: generateDummyData(),
-  STATUSES
-};
+export const leads = generateDummyData();

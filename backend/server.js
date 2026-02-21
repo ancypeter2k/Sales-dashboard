@@ -1,33 +1,32 @@
-const express = require("express");
-const cors = require("cors");
-const { query } = require("./db");
-const { leads: inMemoryLeads, STATUSES } = require("./data");
+import express from "express";
+import cors from "cors";
+import { query } from "./db.js";
+import { leads as inMemoryLeads, STATUSES } from "./data.js";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // Helpers: date normalization and range boundaries
-function toDateKey(dateLike) {
-  return new Date(dateLike).toISOString().split("T")[0];
-}
+const toDateKey = (dateLike) =>
+  new Date(dateLike).toISOString().split("T")[0];
 
-function getCutoffDate(days) {
+const getCutoffDate = (days) => {
   const d = new Date();
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() - (days - 1));
   return d;
-}
+};
 
 // Aggregation: day-by-day revenue series for selected window
-function buildDailySeries(leads, days) {
+const buildDailySeries = (leads, days) => {
   const revenueByDate = {};
 
   leads.forEach((lead) => {
-    const createdAt = lead.createdAt || lead.created_at;
+    const createdAt = lead.createdAt ?? lead.created_at;
     const key = toDateKey(createdAt);
     if (!revenueByDate[key]) revenueByDate[key] = 0;
-    revenueByDate[key] += Number(lead.revenue || 0);
+    revenueByDate[key] += Number(lead.revenue ?? 0);
   });
 
   const series = [];
@@ -40,19 +39,19 @@ function buildDailySeries(leads, days) {
     const key = toDateKey(d);
     series.push({
       date: key,
-      revenue: revenueByDate[key] || 0,
+      revenue: revenueByDate[key] ?? 0,
     });
   }
 
   return series;
-}
+};
 
 // Aggregation: KPI summary + status counts + trend series
-function buildDashboardResponse(leads, days) {
+const buildDashboardResponse = (leads, days) => {
   const totalLeads = leads.length;
   const contactedLeads = leads.filter((l) => l.status === "Contacted").length;
   const salesClosed = leads.filter((l) => l.status === "Converted").length;
-  const totalRevenue = leads.reduce((sum, l) => sum + Number(l.revenue || 0), 0);
+  const totalRevenue = leads.reduce((sum, l) => sum + Number(l.revenue ?? 0), 0);
 
   const statusSummary = STATUSES.map((status) => ({
     status,
@@ -66,13 +65,13 @@ function buildDashboardResponse(leads, days) {
     statusSummary,
     salesTrend,
   };
-}
+};
 
 // Data filter: retain leads inside selected rolling window
-function filterLeadsByDays(leads, days) {
+const filterLeadsByDays = (leads, days) => {
   const cutoff = getCutoffDate(days);
-  return leads.filter((l) => new Date(l.createdAt || l.created_at) >= cutoff);
-}
+  return leads.filter((l) => new Date(l.createdAt ?? l.created_at) >= cutoff);
+};
 
 // API route: dashboard summary endpoint
 app.get("/api/dashboard", async (req, res) => {
@@ -99,7 +98,6 @@ app.get("/api/dashboard", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
-// Server bootstrap
 app.listen(PORT, () =>
   console.log(`Dashboard API: http://localhost:${PORT}/api/dashboard`)
 );
